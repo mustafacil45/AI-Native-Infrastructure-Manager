@@ -1,0 +1,62 @@
+services:
+  schema-server:
+    build: ./schema-server
+    restart: always
+    command: [ "python", "main.py", "--schema-dir", "/data/schemas", "--listen", "0.0.0.0:5001" ]
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./data:/data
+    environment:
+      - SCHEMA_DIR=/data/schemas
+
+  values-server:
+    build: ./values-server
+    restart: always
+    command: [ "python", "main.py", "--schema-dir", "/data/values", "--listen", "0.0.0.0:5002" ]
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./data:/data
+    environment:
+      - VALUES_DIR=/data/values
+
+  bot-server:
+    build: ./bot-server
+    restart: always
+    command: [ "python", "main.py", "--listen", "0.0.0.0:5003" ]
+    ports:
+      - "5003:5003"
+    environment:
+      - SCHEMA_SERVICE_URL=http://schema-server:5001
+      - VALUES_SERVICE_URL=http://values-server:5002
+      - OLLAMA_URL=http://ollama:11434
+      - MODEL_NAME=llama3
+    depends_on:
+      - schema-server
+      - values-server
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+
+  ollama-init:
+    image: curlimages/curl
+    depends_on:
+      - ollama
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for Ollama service...';
+      until curl -s http://ollama:11434/api/tags > /dev/null; do sleep 2; done;
+      echo 'Ollama service is up. Pulling llama3...';
+      curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llama3\"}';
+      echo 'Model llama3 pulled.';
+      "
+
+volumes:
+  ollama_data:

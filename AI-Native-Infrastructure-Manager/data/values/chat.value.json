@@ -1,0 +1,133 @@
+{
+  "ingresses": {
+    "albs": {},
+    "nginxes": {}
+  },
+  "namespace": "chat",
+  "serviceEnv": "test",
+  "serviceGroup": "chat",
+  "services": {
+    "natives": {},
+    "nlbs": {}
+  },
+  "storages": {},
+  "workloads": {
+    "cronjobs": {},
+    "daemonsets": {},
+    "deployments": {
+      "chat": {
+        "automountServiceAccountToken": true,
+        "containers": {
+          "chat": {
+            "envs": {},
+            "image": "chat:1.0.0",
+            "imagePullPolicy": "IfNotPresent",
+            "kind": "container",
+            "liveness": {
+              "failureThreshold": 3,
+              "initialDelaySeconds": 0,
+              "periodSeconds": 10,
+              "probe": {
+                "httpPath": "/live",
+                "kind": "http",
+                "mergeAction": "overwrite",
+                "port": 6666
+              },
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "ports": {},
+            "readiness": {
+              "failureThreshold": 3,
+              "initialDelaySeconds": 0,
+              "periodSeconds": 10,
+              "probe": {
+                "httpPath": "/ready",
+                "kind": "http",
+                "mergeAction": "overwrite",
+                "port": 6666
+              },
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {
+              "cpu": {
+                "limitMilliCPU": 1600000,
+                "requestMilliCPU": 500000
+              },
+              "memory": {
+                "limitMiB": 256,
+                "requestMiB": 512
+              }
+            },
+            "secretEnvs": {},
+            "startup": {
+              "failureThreshold": 3,
+              "initialDelaySeconds": 0,
+              "periodSeconds": 10,
+              "probe": {
+                "httpPath": "/start",
+                "kind": "http",
+                "mergeAction": "overwrite",
+                "port": 6666
+              },
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            }
+          }
+        },
+        "initContainers": {},
+        "injectors": {},
+        "kind": "deployment",
+        "maxUser": 10,
+        "metadata": {
+          "labels": {}
+        },
+        "monitorings": {
+          "log": {
+            "enabled": true,
+            "multiLineParser": ""
+          }
+        },
+        "nativeSidecarContainers": {},
+        "permissions": {},
+        "readinessGate": {
+          "enabled": false
+        },
+        "replicas": 2,
+        "scheduling": {
+          "podDisruptionBudget": {
+            "maxUnavailable": null,
+            "minAvailable": 1
+          }
+        },
+        "secrets": {},
+        "strategy": {
+          "kind": "rollingupdate",
+          "mergeAction": "overwrite",
+          "rollingUpdate": {
+            "maxSurge": "25%",
+            "maxUnavailable": "25%"
+          }
+        },
+        "terminationGracePeriodSeconds": 30,
+        "topologySpread": [
+          {
+            "matchLabelKeys": [
+              "pod-template-hash"
+            ],
+            "maxSkew": 1,
+            "minDomains": 1,
+            "nodeAffinityPolicy": "Honor",
+            "nodeTaintsPolicy": "Honor",
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "DoNotSchedule"
+          }
+        ]
+      }
+    },
+    "jobs": {},
+    "rollouts": {},
+    "statefulsets": {}
+  }
+}
